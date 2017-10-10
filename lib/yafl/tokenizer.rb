@@ -4,42 +4,23 @@ require "strscan"
 
 module YAFL
   class Tokenizer
-    SINGLE_QUOTE_STRING = /'(?:[^']*)'/
-    DOUBLE_QUOTE_STRING = /"(?:[^"]*)"/
-    NUMBER = /((?:\d+(\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?)\b/
-
-    TRUE  = /true/
-    FALSE = /false/
-    NULL  = /null/
-
-    ADD   = /\+/
-    MIN   = /-/
-    MUL   = /\*/
-    DIV   = /\//
-    SLICE = /:/
-    COMMA = /,/
-
-    EQUAL_TO = /==/
-    NOT_EQUAL_TO = /!=/
-    GREATER_THAN = />/
-    GREATER_THAN_OR_EQUAL_TO = />=/
-    LESS_THAN = /</
-    LESS_THAN_OR_EQUAL_TO = /<=/
-    NOT = /!/
-
-    L_PAREN = /\(/
-    R_PAREN = /\)/
-    L_BRACKET = /\[/
-    R_BRACKET = /]/
-
-    REFERENCE = /\$(?:[\w_]*)/
-    IDENTIFIER = /[\w_]+/
-    SELF = /@/
-    PATH_ALL = /\.\.\*[^*]+/
-    PATH_RECURSIVE_DESCENT = /\.\./
-    PATH_WILDCARD = /\.\*/
-    PATH = /\./
-    FILTER = /\?/
+    TOKENS = {
+      reference: /\$(?:[\w]*)/,
+      path_all: /\.\.\*/, path_recursive_descent: /\.\./, path_wildcard: /\.(?:\w+)/, filter: /\?/,
+      left_parenthesis: /\(/, right_parenthesis: /\)/,
+      left_bracket: /\[/, right_bracket: /]/,
+      left_brace: /{/, right_brace: /}/,
+      equal_to: /==/, not_equal_to: /!=/,
+      greater_than: />/, greater_than_or_equal_to: />=/,
+      less_than: /</, less_than_or_equal_to: /<=/,
+      not: /!/, and: /&&/, or: /\|\|/,
+      intersect: /&/, union: /\|/,
+      add: /\+/, minus: /-/, multiply: /\*/, divide: /\//, pow: /\^/,
+      colon: /:/, comma: /,/, self: /@/,
+      true_value: /true/, false_value: /false/, null_value: /null/,
+      single_quote_string: /'(?:[^']*)'/, double_quote_string: /"(?:[^"]*)"/,
+      number: /((?:\d+(\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?)\b/
+    }.freeze
 
     SPACE_OR_NEW_LINE = /[\r\n\s]+/
 
@@ -52,72 +33,16 @@ module YAFL
       @ss.skip(SPACE_OR_NEW_LINE)
 
       pos = @ss.pos
-      if text = @ss.scan(REFERENCE)
-        [:reference, text, pos]
-      elsif text = @ss.scan(IDENTIFIER)
-        [:identifier, text, pos]
-      elsif text = @ss.scan(PATH_ALL)
-        [:all_path, text, pos]
-      elsif text = @ss.scan(PATH_RECURSIVE_DESCENT)
-        [:path_recursive_descent, text, pos]
-      elsif text = @ss.scan(PATH_WILDCARD)
-        [:path_wild_card, text, pos]
-      elsif text = @ss.scan(PATH)
-        [:path, text, pos]
-      elsif text = @ss.scan(L_BRACKET)
-        [:l_bracket, text, pos]
-      elsif text = @ss.scan(R_BRACKET)
-        [:r_bracket, text, pos]
-      elsif text = @ss.scan(L_PAREN)
-        [:l_paren, text, pos]
-      elsif text = @ss.scan(R_PAREN)
-        [:r_paren, text, pos]
-      elsif text = @ss.scan(FILTER)
-        [:filter, text, pos]
-      elsif text = @ss.scan(SELF)
-        [:self, text, pos]
-      elsif text = @ss.scan(SINGLE_QUOTE_STRING)
-        [:string, text, pos]
-      elsif text = @ss.scan(DOUBLE_QUOTE_STRING)
-        [:string, text, pos]
-      elsif text = @ss.scan(NUMBER)
-        [:number, text, pos]
-      elsif text = @ss.scan(EQUAL_TO)
-        [:equal_to, text, pos]
-      elsif text = @ss.scan(NOT_EQUAL_TO)
-        [:not_equal_to, text, pos]
-      elsif text = @ss.scan(GREATER_THAN)
-        [:greater_than, text, pos]
-      elsif text = @ss.scan(GREATER_THAN_OR_EQUAL_TO)
-        [:greater_than_or_equal_to, text, pos]
-      elsif text = @ss.scan(LESS_THAN)
-        [:less_than, text, pos]
-      elsif text = @ss.scan(LESS_THAN_OR_EQUAL_TO)
-        [:less_than_or_equal_to, text, pos]
-      elsif text = @ss.scan(NOT)
-        [:not, text, pos]
-      elsif text = @ss.scan(SLICE)
-        [:slice, text, pos]
-      elsif text = @ss.scan(COMMA)
-        [:comma, text, pos]
-      elsif text = @ss.scan(TRUE)
-        [:true, text, pos]
-      elsif text = @ss.scan(FALSE)
-        [:false, text, pos]
-      elsif text = @ss.scan(NULL)
-        [:null, text, pos]
-      elsif text = @ss.scan(ADD)
-        [:add, text, pos]
-      elsif text = @ss.scan(MIN)
-        [:min, text, pos]
-      elsif text = @ss.scan(MUL)
-        [:mul, text, pos]
-      elsif text = @ss.scan(DIV)
-        [:div, text, @ss.pos]
-      else
-        x = @ss.getch
-        [x, x, @ss.pos]
+
+      TOKENS.each do |token_type, pattern|
+        text = @ss.scan(pattern)
+        next unless text
+        return [token_type, text, pos]
       end
+
+      # TODO: raise TokenizeError
+      x = @ss.getch
+      [x, x, @ss.pos]
     end
 
     def eos?
@@ -129,24 +54,28 @@ module YAFL
       tokens = []
       tokens << tokenizer.next_token until tokenizer.eos?
 
-      validate_balenced!(tokens)
+      validate_balanced!(tokens)
 
       tokens
     end
 
-    def self.validate_balenced!(tokens)
+    def self.validate_balanced!(tokens)
       s = []
 
       tokens.each do |t|
         case t[0]
-        when :l_paren
-          s.push :l_paren
-        when :r_paren
-          raise TokenizeError unless s.pop == :l_paren
-        when :l_bracket
-          s.push :l_bracket
-        when :r_bracket
-          raise TokenizeError unless s.pop == :l_bracket
+        when :left_parenthesis
+          s.push :left_parenthesis
+        when :right_parenthesis
+          raise TokenizeError unless s.pop == :left_parenthesis
+        when :left_bracket
+          s.push :left_bracket
+        when :right_bracket
+          raise TokenizeError unless s.pop == :left_bracket
+        when :left_brace
+          s.push :left_brace
+        when :right_brace
+          raise TokenizeError unless s.pop == :left_brace
         end
       end
 
