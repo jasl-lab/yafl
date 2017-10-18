@@ -123,3 +123,9 @@ Lint/RequireParentheses:
 
 Matrics/MethodLength:
   Enabled: false
+
+Matrics/LineLength:
+  Enabled: false
+
+Style/EmptyCaseCondition:
+  Enabled: false
