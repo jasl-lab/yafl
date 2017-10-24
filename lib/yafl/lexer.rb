@@ -12,7 +12,6 @@ module YAFL
     SELF_PATTERN = /@/
 
     PATH_PATTERN = /\.(?<identifier>#{IDENTIFIER_PATTERN.source}|\*)/
-    FLATTEN_PATH_PATTERN = /\.\.(?<identifier>#{IDENTIFIER_PATTERN.source}|\*)/
 
     FILTER_PATTERN = /\?/
 
@@ -82,8 +81,6 @@ module YAFL
         case
         when try_match(REFERENCE_PATTERN)
           [[@lineno, @column], :reference, @scanner[:identifier]]
-        when try_match(FLATTEN_PATH_PATTERN)
-          [[@lineno, @column], :flatten_path, @scanner[:identifier]]
         when try_match(PATH_PATTERN)
           [[@lineno, @column], :path, @scanner[:identifier]]
         when try_match(FILTER_PATTERN) && @scanner.check(LEFT_PAREN_PATTERN)

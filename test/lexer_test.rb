@@ -22,13 +22,13 @@ class LexerTest < Minitest::Test
       [:reference, "octopi"], [:less_than_or_equal_to], [:number, 7500], [:and],
       [:reference, "sharks"], [:greater_than], [:number, 1500]
     ],
-    "$..book[0:1:1]" => [
-      [:reference, ""], [:flatten_path, "book"], [:left_bracket],
+    "$.book[0:1:1]" => [
+      [:reference, ""], [:path, "book"], [:left_bracket],
       [:number, 0], [:colon], [:number, 1], [:colon], [:number, 1],
       [:right_bracket]
     ],
-    "$..book[?(@['price'] == 13 || @['price'] == 23)] + 1" => [
-      [:reference, ""], [:flatten_path, "book"], [:left_bracket],
+    "$.book[?(@['price'] == 13 || @['price'] == 23)] + 1" => [
+      [:reference, ""], [:path, "book"], [:left_bracket],
       [:filter], [:left_paren], [:self], [:left_bracket], [:string, "price"], [:right_bracket],
       [:equal_to], [:number, 13], [:or], [:self], [:left_bracket], [:string, "price"], [:right_bracket],
       [:equal_to], [:number, 23], [:right_paren], [:right_bracket], [:add], [:number, 1]
