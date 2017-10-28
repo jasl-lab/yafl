@@ -18,9 +18,9 @@ Gem::Specification.new do |s|
   TEXT
   s.license = "MIT"
 
+  s.add_development_dependency "minitest"
   s.add_development_dependency "pry"
   s.add_development_dependency "rake"
-  s.add_development_dependency "minitest"
   s.add_development_dependency "rubocop"
 
   s.files        = Dir["lib/**/*", "MIT-LICENSE", "Rakefile", "README.md"]

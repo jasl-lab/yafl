@@ -39,7 +39,7 @@ class TokenizerTest < Minitest::Test
     SAMPLES.each do |input, expect|
       # puts input
       lexer = YAFL::Tokenizer.new(input)
-      tokens = lexer.tokenize.map { |t| [t[0], t[1][0]].compact }
+      tokens = lexer.tokenize.map { |t| [t.type, t.value].compact }
 
       assert_equal expect, tokens
     end

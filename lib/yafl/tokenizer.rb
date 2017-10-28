@@ -80,87 +80,87 @@ module YAFL
       token =
         case
         when try_match(REFERENCE_PATTERN)
-          [:REFERENCE, [@scanner[:identifier], @lineno, @column]]
+          Token.new :REFERENCE, @scanner[:identifier], @lineno, @column
         when try_match(PATH_PATTERN)
-          [:PATH, [@scanner[:identifier], @lineno, @column]]
+          Token.new :PATH, @scanner[:identifier], @lineno, @column
         when try_match(FILTER_PATTERN) && @scanner.check(OPEN_PAREN_PATTERN)
-          [:FILTER, [nil, @lineno, @column]]
+          Token.new :FILTER, nil, @lineno, @column
         when try_match(OPEN_BRACKET_PATTERN)
-          @state_stack.push [:OPEN_BRACKET, [nil, @lineno, @column]]
+          @state_stack.push Token.new :OPEN_BRACKET, nil, @lineno, @column
           @state_stack.last
         when try_match(OPEN_PAREN_PATTERN)
-          @state_stack.push [:OPEN_PAREN, [nil, @lineno, @column]]
+          @state_stack.push Token.new :OPEN_PAREN, nil, @lineno, @column
           @state_stack.last
         when try_match(CLOSE_BRACKET_PATTERN)
           last = @state_stack.pop
           unless last
-            raise TokenizeError.unexpected(column: @column, lineno: @lineno, token: "]")
+            raise TokenizeError.unexpected("]", @lineno, @column)
           end
-          unless last[0] == :OPEN_BRACKET
-            raise TokenizeError.unbalanced(column: last[1][2], lineno: last[1][1], token: "[")
+          unless last.type == :OPEN_BRACKET
+            raise TokenizeError.unbalanced("[", last.lineno, last.column)
           end
-          [:CLOSE_BRACKET, [nil, @lineno, @column]]
+          Token.new :CLOSE_BRACKET, nil, @lineno, @column
         when try_match(CLOSE_PAREN_PATTERN)
           last = @state_stack.pop
           unless last
-            raise TokenizeError.unexpected(column: @column, lineno: @lineno, token: ")")
+            raise TokenizeError.unexpected(")", @lineno, @column)
           end
-          unless last[0] == :OPEN_PAREN
-            raise TokenizeError.unbalanced(column: last[1][2], lineno: last[1][1], token: "(")
+          unless last.type == :OPEN_PAREN
+            raise TokenizeError.unbalanced("(", last.lineno, last.column)
           end
-          [:CLOSE_PAREN, [nil, @lineno, @column]]
+          Token.new :CLOSE_PAREN, nil, @lineno, @column
         when try_match(SELF_PATTERN)
-          [:SELF, [nil, @lineno, @column]]
+          Token.new :SELF, nil, @lineno, @column
         when try_match(NUMBER_PATTERN)
-          [:NUMBER, [BigDecimal.new(@last_captured), @lineno, @column]]
+          Token.new :NUMBER, BigDecimal.new(@last_captured), @lineno, @column
         when try_match(STRING_PATTERN)
-          [:STRING, [@scanner[:str], @lineno, @column]]
+          Token.new :STRING, @scanner[:str], @lineno, @column
         when try_match(TRUE_PATTERN)
-          [:BOOLEAN, [true, @lineno, @column]]
+          Token.new :BOOLEAN, true, @lineno, @column
         when try_match(FALSE_PATTERN)
-          [:BOOLEAN, [false, @lineno, @column]]
+          Token.new :BOOLEAN, false, @lineno, @column
         when try_match(COLON_PATTERN)
-          [:COLON, [nil, @lineno, @column]]
+          Token.new :COLON, nil, @lineno, @column
         when try_match(COMMA_PATTERN)
-          [:COMMA, [nil, @lineno, @column]]
+          Token.new :COMMA, nil, @lineno, @column
         when try_match(ADD_PATTERN)
-          [:ADD, [nil, @lineno, @column]]
+          Token.new :ADD, nil, @lineno, @column
         when try_match(SUBTRACT_PATTERN)
-          [:SUBTRACT, [nil, @lineno, @column]]
+          Token.new :SUBTRACT, nil, @lineno, @column
         when try_match(MULTIPLY_PATTERN)
-          [:MULTIPLY, [nil, @lineno, @column]]
+          Token.new :MULTIPLY, nil, @lineno, @column
         when try_match(DIVIDE_PATTERN)
-          [:DIVIDE, [nil, @lineno, @column]]
+          Token.new :DIVIDE, nil, @lineno, @column
         when try_match(POW_PATTERN)
-          [:POW, [nil, @lineno, @column]]
+          Token.new :POW, nil, @lineno, @column
         when try_match(MOD_PATTERN)
-          [:MOD, [nil, @lineno, @column]]
+          Token.new :MOD, nil, @lineno, @column
         when try_match(EQUAL_TO_PATTERN)
-          [:EQUAL_TO, [nil, @lineno, @column]]
+          Token.new :EQUAL_TO, nil, @lineno, @column
         when try_match(NOT_EQUAL_TO_PATTERN)
-          [:NOT_EQUAL_TO, [nil, @lineno, @column]]
+          Token.new :NOT_EQUAL_TO, nil, @lineno, @column
         when try_match(GREATER_THAN_OR_EQUAL_TO_PATTERN)
-          [:GREATER_THAN_OR_EQUAL_TO, [nil, @lineno, @column]]
+          Token.new :GREATER_THAN_OREQUAL_TO, nil, @lineno, @column
         when try_match(GREATER_THAN_PATTERN)
-          [:GREATER_THAN, [nil, @lineno, @column]]
+          Token.new :GREATER_THAN, nil, @lineno, @column
         when try_match(LESS_THAN_OR_EQUAL_TO_PATTERN)
-          [:LESS_THAN_OR_EQUAL_TO, [nil, @lineno, @column]]
+          Token.new :LESS_THAN_OR_EQUAL_TO, nil, @lineno, @column
         when try_match(LESS_THAN_PATTERN)
-          [:LESS_THAN, [nil, @lineno, @column]]
+          Token.new :LESS_THAN, nil, @lineno, @column
         when try_match(AND_PATTERN)
-          [:AND, [nil, @lineno, @column]]
+          Token.new :AND, nil, @lineno, @column
         when try_match(OR_PATTERN)
-          [:OR, [nil, @lineno, @column]]
+          Token.new :OR, nil, @lineno, @column
         when try_match(NOT_PATTERN)
-          [:NOT, [nil, @lineno, @column]]
+          Token.new :NOT, nil, @lineno, @column
         when try_match(INTERSECT_PATTERN)
-          [:INTERSECT, [nil, @lineno, @column]]
+          Token.new :INTERSECT, nil, @lineno, @column
         when try_match(UNION_PATTERN)
-          [:UNION, [nil, @lineno, @column]]
+          Token.new :UNION, nil, @lineno, @column
         when try_match(IDENTIFIER_PATTERN) && @scanner.check(OPEN_PAREN_PATTERN)
-          [:FUNCTION, [@last_captured, @lineno, @column]]
+          Token.new :FUNCTION, @last_captured, @lineno, @column
         else
-          raise TokenizeError.unexpected(column: @column, lineno: @lineno, token: @scanner.peek(7))
+          raise TokenizeError.unexpected(@scanner.peek(7), @lineno, @column)
         end
 
       @column += @last_captured.length

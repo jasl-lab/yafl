@@ -7,7 +7,7 @@ module YAFL
   class TokenizeError < YAFLError
     attr_reader :type, :column, :lineno, :token
 
-    def initialize(type:, column:, lineno:, token:, message:)
+    def initialize(type, token, lineno, column, message)
       @type = type
       @column = column
       @lineno = lineno
@@ -17,17 +17,17 @@ module YAFL
     end
 
     class << self
-      def unexpected(column:, lineno:, token:)
+      def unexpected(token, lineno, column)
         new(
-          type: :unexpected, column: column, lineno: lineno, token: token,
-          message: "unexpected \"#{token.length > 6 ? "#{token[0..5]}..." : token}\" at lineno #{lineno} column: #{column}"
+          :unexpected, token, lineno, column,
+          "unexpected \"#{token.length > 6 ? "#{token[0..5]}..." : token}\" at lineno #{lineno} column: #{column}"
         )
       end
 
-      def unbalanced(column:, lineno:, token:)
+      def unbalanced(token, lineno, column)
         new(
-          type: :unbalanced, column: column, lineno: lineno, token: token,
-          message: "unbalanced \"#{token}\" at lineno #{lineno} column: #{column}"
+          :unbalanced, token, lineno, column,
+          "unbalanced \"#{token}\" at lineno #{lineno} column: #{column}"
         )
       end
     end
