@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module YAFL
-  class Lexer
+  class Tokenizer
     attr_reader :column, :lineno, :tokens
 
     SKIP_PATTERN = /(?<before>[ \t]*)(?<new_line>(\n|\r\n)*)(?<after>[ \t]*)/
@@ -21,19 +21,19 @@ module YAFL
     TRUE_PATTERN = /true/
     FALSE_PATTERN = /false/
 
-    LEFT_PAREN_PATTERN = /\(/
-    LEFT_BRACKET_PATTERN = /\[/
+    OPEN_PAREN_PATTERN = /\(/
+    OPEN_BRACKET_PATTERN = /\[/
 
-    RIGHT_PAREN_PATTERN = /\)/
-    RIGHT_BRACKET_PATTERN = /]/
+    CLOSE_PAREN_PATTERN = /\)/
+    CLOSE_BRACKET_PATTERN = /]/
 
     COMMA_PATTERN = /,/
     COLON_PATTERN = /:/
 
     ADD_PATTERN = /\+/
-    MINUS_PATTERN = /-/
-    MUL_PATTERN = /\*/
-    DIV_PATTERN = /\// # rubocop:disable Style/RegexpLiteral
+    SUBTRACT_PATTERN = /-/
+    MULTIPLY_PATTERN = /\*/
+    DIVIDE_PATTERN = /\// # rubocop:disable Style/RegexpLiteral
     POW_PATTERN = /\^/
     MOD_PATTERN = /%/
     INTERSECT_PATTERN = /&/
@@ -80,85 +80,85 @@ module YAFL
       token =
         case
         when try_match(REFERENCE_PATTERN)
-          [[@lineno, @column], :reference, @scanner[:identifier]]
+          [:REFERENCE, [@scanner[:identifier], @lineno, @column]]
         when try_match(PATH_PATTERN)
-          [[@lineno, @column], :path, @scanner[:identifier]]
-        when try_match(FILTER_PATTERN) && @scanner.check(LEFT_PAREN_PATTERN)
-          [[@lineno, @column], :filter]
-        when try_match(LEFT_BRACKET_PATTERN)
-          @state_stack.push [[@lineno, @column], :left_bracket]
+          [:PATH, [@scanner[:identifier], @lineno, @column]]
+        when try_match(FILTER_PATTERN) && @scanner.check(OPEN_PAREN_PATTERN)
+          [:FILTER, [nil, @lineno, @column]]
+        when try_match(OPEN_BRACKET_PATTERN)
+          @state_stack.push [:OPEN_BRACKET, [nil, @lineno, @column]]
           @state_stack.last
-        when try_match(LEFT_PAREN_PATTERN)
-          @state_stack.push [[@lineno, @column], :left_paren]
+        when try_match(OPEN_PAREN_PATTERN)
+          @state_stack.push [:OPEN_PAREN, [nil, @lineno, @column]]
           @state_stack.last
-        when try_match(RIGHT_BRACKET_PATTERN)
+        when try_match(CLOSE_BRACKET_PATTERN)
           last = @state_stack.pop
           unless last
             raise TokenizeError.unexpected(column: @column, lineno: @lineno, token: "]")
           end
-          unless last[1] == :left_bracket
-            raise TokenizeError.unbalanced(column: last[1], lineno: last[2], token: "[")
+          unless last[0] == :OPEN_BRACKET
+            raise TokenizeError.unbalanced(column: last[1][2], lineno: last[1][1], token: "[")
           end
-          [[@lineno, @column], :right_bracket]
-        when try_match(RIGHT_PAREN_PATTERN)
+          [:CLOSE_BRACKET, [nil, @lineno, @column]]
+        when try_match(CLOSE_PAREN_PATTERN)
           last = @state_stack.pop
           unless last
             raise TokenizeError.unexpected(column: @column, lineno: @lineno, token: ")")
           end
-          unless last[1] == :left_paren
-            raise TokenizeError.unbalanced(column: last[1], lineno: last[2], token: "(")
+          unless last[0] == :OPEN_PAREN
+            raise TokenizeError.unbalanced(column: last[1][2], lineno: last[1][1], token: "(")
           end
-          [[@lineno, @column], :right_paren]
+          [:CLOSE_PAREN, [nil, @lineno, @column]]
         when try_match(SELF_PATTERN)
-          [[@lineno, @column], :self]
+          [:SELF, [nil, @lineno, @column]]
         when try_match(NUMBER_PATTERN)
-          [[@lineno, @column], :number, BigDecimal.new(@last_captured)]
+          [:NUMBER, [BigDecimal.new(@last_captured), @lineno, @column]]
         when try_match(STRING_PATTERN)
-          [[@lineno, @column], :string, @scanner[:str]]
+          [:STRING, [@scanner[:str], @lineno, @column]]
         when try_match(TRUE_PATTERN)
-          [[@lineno, @column], :boolean, true]
+          [:BOOLEAN, [true, @lineno, @column]]
         when try_match(FALSE_PATTERN)
-          [[@lineno, @column], :boolean, false]
+          [:BOOLEAN, [false, @lineno, @column]]
         when try_match(COLON_PATTERN)
-          [[@lineno, @column], :colon]
+          [:COLON, [nil, @lineno, @column]]
         when try_match(COMMA_PATTERN)
-          [[@lineno, @column], :comma]
+          [:COMMA, [nil, @lineno, @column]]
         when try_match(ADD_PATTERN)
-          [[@lineno, @column], :add]
-        when try_match(MINUS_PATTERN)
-          [[@lineno, @column], :minus]
-        when try_match(MUL_PATTERN)
-          [[@lineno, @column], :mul]
-        when try_match(DIV_PATTERN)
-          [[@lineno, @column], :div]
+          [:ADD, [nil, @lineno, @column]]
+        when try_match(SUBTRACT_PATTERN)
+          [:SUBTRACT, [nil, @lineno, @column]]
+        when try_match(MULTIPLY_PATTERN)
+          [:MULTIPLY, [nil, @lineno, @column]]
+        when try_match(DIVIDE_PATTERN)
+          [:DIVIDE, [nil, @lineno, @column]]
         when try_match(POW_PATTERN)
-          [[@lineno, @column], :pow]
+          [:POW, [nil, @lineno, @column]]
         when try_match(MOD_PATTERN)
-          [[@lineno, @column], :mod]
+          [:MOD, [nil, @lineno, @column]]
         when try_match(EQUAL_TO_PATTERN)
-          [[@lineno, @column], :equal_to]
+          [:EQUAL_TO, [nil, @lineno, @column]]
         when try_match(NOT_EQUAL_TO_PATTERN)
-          [[@lineno, @column], :not_equal_to]
+          [:NOT_EQUAL_TO, [nil, @lineno, @column]]
         when try_match(GREATER_THAN_OR_EQUAL_TO_PATTERN)
-          [[@lineno, @column], :greater_than_or_equal_to]
+          [:GREATER_THAN_OR_EQUAL_TO, [nil, @lineno, @column]]
         when try_match(GREATER_THAN_PATTERN)
-          [[@lineno, @column], :greater_than]
+          [:GREATER_THAN, [nil, @lineno, @column]]
         when try_match(LESS_THAN_OR_EQUAL_TO_PATTERN)
-          [[@lineno, @column], :less_than_or_equal_to]
+          [:LESS_THAN_OR_EQUAL_TO, [nil, @lineno, @column]]
         when try_match(LESS_THAN_PATTERN)
-          [[@lineno, @column], :less_than]
+          [:LESS_THAN, [nil, @lineno, @column]]
         when try_match(AND_PATTERN)
-          [[@lineno, @column], :and]
+          [:AND, [nil, @lineno, @column]]
         when try_match(OR_PATTERN)
-          [[@lineno, @column], :or]
+          [:OR, [nil, @lineno, @column]]
         when try_match(NOT_PATTERN)
-          [[@lineno, @column], :not]
+          [:NOT, [nil, @lineno, @column]]
         when try_match(INTERSECT_PATTERN)
-          [[@lineno, @column], :intersect]
+          [:INTERSECT, [nil, @lineno, @column]]
         when try_match(UNION_PATTERN)
-          [[@lineno, @column], :union]
-        when try_match(IDENTIFIER_PATTERN) && @scanner.check(LEFT_PAREN_PATTERN)
-          [[@lineno, @column], :function, @last_captured]
+          [:UNION, [nil, @lineno, @column]]
+        when try_match(IDENTIFIER_PATTERN) && @scanner.check(OPEN_PAREN_PATTERN)
+          [:FUNCTION, [@last_captured, @lineno, @column]]
         else
           raise TokenizeError.unexpected(column: @column, lineno: @lineno, token: @scanner.peek(7))
         end
@@ -169,7 +169,7 @@ module YAFL
       token
     end
 
-    def lex
+    def tokenize
       next_token until @scanner.eos?
       tokens
     end

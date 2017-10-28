@@ -4,7 +4,7 @@ require "strscan"
 require "bigdecimal"
 
 require "yafl/errors"
-require "yafl/lexer"
+require "yafl/tokenizer"
 
 module YAFL # :nodoc:
 end
