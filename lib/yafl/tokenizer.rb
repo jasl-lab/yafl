@@ -6,7 +6,7 @@ module YAFL
 
     SKIP_PATTERN = /(?<before>[ \t]*)(?<new_line>(\n|\r\n)*)(?<after>[ \t]*)/
 
-    IDENTIFIER_PATTERN = /[_a-z][_a-z0-9]*/
+    IDENTIFIER_PATTERN = /[_a-zA-Z][_a-zA-Z0-9]*/
 
     REFERENCE_PATTERN = /\$(?<identifier>#{IDENTIFIER_PATTERN.source}|)/
     SELF_PATTERN = /@/
@@ -170,6 +170,9 @@ module YAFL
         when try_match(UNION_PATTERN)
           Token.new :UNION, "|", @lineno, @column
         when try_match(IDENTIFIER_PATTERN) && @scanner.check(OPEN_PAREN_PATTERN)
+          unless @scanner.check(OPEN_PAREN_PATTERN)
+            raise TokenizeError.unexpected(@scanner.peek(7), @lineno, @column)
+          end
           Token.new :FUNCTION, @last_captured, @lineno, @column
         else
           raise TokenizeError.unexpected(@scanner.peek(7), @lineno, @column)
@@ -184,6 +187,10 @@ module YAFL
     def tokenize
       next_token until @scanner.eos?
       tokens
+    end
+
+    def self.tokenize(exp)
+      new(exp).tokenize
     end
 
     private

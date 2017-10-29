@@ -7,6 +7,21 @@ Yet Another Formula Language.
 
 TODO
 
+### Operator priority
+
+| operator | description |
+| -------- | ----------- |
+| ^ | Exponentiation |
+| ! - | Not, unary minus |
+| * / % | Multiply, divide, and modulo |
+| + - | Addition and subtraction |
+| & | Intersection |
+| &#124; | Union |
+| <= < > >= | Comparison operators |
+| != == | Equality operators |
+| && | Logical `AND` |
+| &#124;&#124; | Logical `OR` |
+
 ## Installation
 
 Add this line to your Gemfile:
