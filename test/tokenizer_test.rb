@@ -7,17 +7,17 @@ class TokenizerTest < Minitest::Test
   SAMPLES = {
     "" => [],
     "1+1" => [[:NUMBER, 1], [:ADD], [:NUMBER, 1]],
-    "-5" => [[:NUMBER, -5]],
-    "(-5)" => [[:OPEN_PAREN], [:NUMBER, -5], [:CLOSE_PAREN]],
+    "-5" => [[:UMINUS], [:NUMBER, 5]],
+    "-(-5)" => [[:UMINUS], [:OPEN_PAREN], [:UMINUS], [:NUMBER, 5], [:CLOSE_PAREN]],
     "if(-5 > $a, -77, -88) + 99" => [
-      [:FUNCTION, "if"], [:OPEN_PAREN], [:NUMBER, -5], [:GREATER_THAN], [:REFERENCE, "a"],
-      [:COMMA], [:NUMBER, -77], [:COMMA], [:NUMBER, -88], [:CLOSE_PAREN], [:ADD], [:NUMBER, 99]
+      [:FUNCTION, "if"], [:OPEN_PAREN], [:UMINUS], [:NUMBER, 5], [:GREATER_THAN], [:REFERENCE, "a"],
+      [:COMMA], [:UMINUS], [:NUMBER, 77], [:COMMA], [:UMINUS], [:NUMBER, 88], [:CLOSE_PAREN], [:ADD], [:NUMBER, 99]
     ],
     "1     / \n1     - $a" => [[:NUMBER, 1], [:DIVIDE], [:NUMBER, 1], [:SUBTRACT], [:REFERENCE, "a"]],
-    "10 ^-2" => [[:NUMBER, 10], [:POW], [:NUMBER, -2]],
+    "10 ^-2" => [[:NUMBER, 10], [:POW], [:UMINUS], [:NUMBER, 2]],
     "1.5* 3.7" => [[:NUMBER, 1.5], [:MULTIPLY], [:NUMBER, 3.7]],
     '"giraffe" == "giraffe"' => [[:STRING, "giraffe"], [:EQUAL_TO], [:STRING, "giraffe"]],
-    "-2--3" => [[:NUMBER, -2], [:SUBTRACT], [:NUMBER, -3]],
+    "-2--3" => [[:UMINUS], [:NUMBER, 2], [:SUBTRACT], [:UMINUS], [:NUMBER, 3]],
     "$octopi <= 7500 && $sharks > 1500" => [
       [:REFERENCE, "octopi"], [:LESS_THAN_OR_EQUAL_TO], [:NUMBER, 7500], [:AND],
       [:REFERENCE, "sharks"], [:GREATER_THAN], [:NUMBER, 1500]

@@ -15,7 +15,7 @@ module YAFL
 
     FILTER_PATTERN = /\?/
 
-    NUMBER_PATTERN = /(-?\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?\b/
+    NUMBER_PATTERN = /(\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?\b/
     STRING_PATTERN = /(?<delim>['"])(?<str>.*?)\k<delim>/
 
     TRUE_PATTERN = /true/
@@ -126,7 +126,19 @@ module YAFL
         when try_match(ADD_PATTERN)
           Token.new :ADD, nil, @lineno, @column
         when try_match(SUBTRACT_PATTERN)
-          Token.new :SUBTRACT, nil, @lineno, @column
+          case @tokens.last&.type
+          when nil, :OPEN_PAREN, :OPEN_BRACKET, :COMMA, :COLON, :POW, :MOD, :ADD, :SUBTRACT, :MULTIPLY, :DIVIDE
+            if @scanner.check(NUMBER_PATTERN) ||
+               @scanner.check(REFERENCE_PATTERN) ||
+               @scanner.check(SUBTRACT_PATTERN) ||
+               @scanner.check(OPEN_PAREN_PATTERN)
+              Token.new :UMINUS, nil, @lineno, @column
+            else
+              raise TokenizeError.unexpected("-", @lineno, @column)
+            end
+          else
+            Token.new :SUBTRACT, nil, @lineno, @column
+          end
         when try_match(MULTIPLY_PATTERN)
           Token.new :MULTIPLY, nil, @lineno, @column
         when try_match(DIVIDE_PATTERN)
