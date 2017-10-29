@@ -84,12 +84,12 @@ module YAFL
         when try_match(PATH_PATTERN)
           Token.new :PATH, @scanner[:identifier], @lineno, @column
         when try_match(FILTER_PATTERN) && @scanner.check(OPEN_PAREN_PATTERN)
-          Token.new :FILTER, nil, @lineno, @column
+          Token.new :FILTER, "?", @lineno, @column
         when try_match(OPEN_BRACKET_PATTERN)
-          @state_stack.push Token.new :OPEN_BRACKET, nil, @lineno, @column
+          @state_stack.push Token.new :OPEN_BRACKET, "[", @lineno, @column
           @state_stack.last
         when try_match(OPEN_PAREN_PATTERN)
-          @state_stack.push Token.new :OPEN_PAREN, nil, @lineno, @column
+          @state_stack.push Token.new :OPEN_PAREN, "(", @lineno, @column
           @state_stack.last
         when try_match(CLOSE_BRACKET_PATTERN)
           last = @state_stack.pop
@@ -99,7 +99,7 @@ module YAFL
           unless last.type == :OPEN_BRACKET
             raise TokenizeError.unbalanced("[", last.lineno, last.column)
           end
-          Token.new :CLOSE_BRACKET, nil, @lineno, @column
+          Token.new :CLOSE_BRACKET, "]", @lineno, @column
         when try_match(CLOSE_PAREN_PATTERN)
           last = @state_stack.pop
           unless last
@@ -108,9 +108,9 @@ module YAFL
           unless last.type == :OPEN_PAREN
             raise TokenizeError.unbalanced("(", last.lineno, last.column)
           end
-          Token.new :CLOSE_PAREN, nil, @lineno, @column
+          Token.new :CLOSE_PAREN, ")", @lineno, @column
         when try_match(SELF_PATTERN)
-          Token.new :SELF, nil, @lineno, @column
+          Token.new :SELF, "@", @lineno, @column
         when try_match(NUMBER_PATTERN)
           Token.new :NUMBER, BigDecimal.new(@last_captured), @lineno, @column
         when try_match(STRING_PATTERN)
@@ -120,11 +120,11 @@ module YAFL
         when try_match(FALSE_PATTERN)
           Token.new :BOOLEAN, false, @lineno, @column
         when try_match(COLON_PATTERN)
-          Token.new :COLON, nil, @lineno, @column
+          Token.new :COLON, ":", @lineno, @column
         when try_match(COMMA_PATTERN)
-          Token.new :COMMA, nil, @lineno, @column
+          Token.new :COMMA, ",", @lineno, @column
         when try_match(ADD_PATTERN)
-          Token.new :ADD, nil, @lineno, @column
+          Token.new :ADD, "+", @lineno, @column
         when try_match(SUBTRACT_PATTERN)
           case @tokens.last&.type
           when nil, :OPEN_PAREN, :OPEN_BRACKET, :COMMA, :COLON, :POW, :MOD, :ADD, :SUBTRACT, :MULTIPLY, :DIVIDE
@@ -132,43 +132,43 @@ module YAFL
                @scanner.check(REFERENCE_PATTERN) ||
                @scanner.check(SUBTRACT_PATTERN) ||
                @scanner.check(OPEN_PAREN_PATTERN)
-              Token.new :UMINUS, nil, @lineno, @column
+              Token.new :UMINUS, "-", @lineno, @column
             else
               raise TokenizeError.unexpected("-", @lineno, @column)
             end
           else
-            Token.new :SUBTRACT, nil, @lineno, @column
+            Token.new :SUBTRACT, "-", @lineno, @column
           end
         when try_match(MULTIPLY_PATTERN)
-          Token.new :MULTIPLY, nil, @lineno, @column
+          Token.new :MULTIPLY, "*", @lineno, @column
         when try_match(DIVIDE_PATTERN)
-          Token.new :DIVIDE, nil, @lineno, @column
+          Token.new :DIVIDE, "/", @lineno, @column
         when try_match(POW_PATTERN)
-          Token.new :POW, nil, @lineno, @column
+          Token.new :POW, "^", @lineno, @column
         when try_match(MOD_PATTERN)
-          Token.new :MOD, nil, @lineno, @column
+          Token.new :MOD, "%", @lineno, @column
         when try_match(EQUAL_TO_PATTERN)
-          Token.new :EQUAL_TO, nil, @lineno, @column
+          Token.new :EQUAL_TO, "==", @lineno, @column
         when try_match(NOT_EQUAL_TO_PATTERN)
-          Token.new :NOT_EQUAL_TO, nil, @lineno, @column
+          Token.new :NOT_EQUAL_TO, "!=", @lineno, @column
         when try_match(GREATER_THAN_OR_EQUAL_TO_PATTERN)
-          Token.new :GREATER_THAN_OREQUAL_TO, nil, @lineno, @column
+          Token.new :GREATER_THAN_OR_EQUAL_TO, ">=", @lineno, @column
         when try_match(GREATER_THAN_PATTERN)
-          Token.new :GREATER_THAN, nil, @lineno, @column
+          Token.new :GREATER_THAN, ">", @lineno, @column
         when try_match(LESS_THAN_OR_EQUAL_TO_PATTERN)
-          Token.new :LESS_THAN_OR_EQUAL_TO, nil, @lineno, @column
+          Token.new :LESS_THAN_OR_EQUAL_TO, "<=", @lineno, @column
         when try_match(LESS_THAN_PATTERN)
-          Token.new :LESS_THAN, nil, @lineno, @column
+          Token.new :LESS_THAN, "<", @lineno, @column
         when try_match(AND_PATTERN)
-          Token.new :AND, nil, @lineno, @column
+          Token.new :AND, "&&", @lineno, @column
         when try_match(OR_PATTERN)
-          Token.new :OR, nil, @lineno, @column
+          Token.new :OR, "||", @lineno, @column
         when try_match(NOT_PATTERN)
-          Token.new :NOT, nil, @lineno, @column
+          Token.new :NOT, "!", @lineno, @column
         when try_match(INTERSECT_PATTERN)
-          Token.new :INTERSECT, nil, @lineno, @column
+          Token.new :INTERSECT, "&", @lineno, @column
         when try_match(UNION_PATTERN)
-          Token.new :UNION, nil, @lineno, @column
+          Token.new :UNION, "|", @lineno, @column
         when try_match(IDENTIFIER_PATTERN) && @scanner.check(OPEN_PAREN_PATTERN)
           Token.new :FUNCTION, @last_captured, @lineno, @column
         else
